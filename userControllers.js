@@ -1,41 +1,39 @@
 const User = require('../models/User');
-
 const bcryptjs = require('bcryptjs');
 
 const registerUser = async (req, res) => {
-  const { username, email, password, fullname } = req.body;
-  // console.log(username, email, password, fullname)
+  const { username, fullname, email, password } = req.body;
 
-  const exestingUserByUsername = await User.findOne({ where: { username } });
+  try {
+    const existingUserByEmail = await User.findOne({ where: { email } });
 
-  console.log('exestingUserByUsername', exestingUserByUsername);
+    if (existingUserByEmail) {
+      return res
+        .status(422)
+        .json({ error: 'User already exists with that email' });
+    }
 
-  if (exestingUserByUsername) {
-    return res
-      .status(422)
-      .json({ error: 'User already exists with that username' });
+    const existingUserByUsername = await User.findOne({ where: { username } });
+
+    if (existingUserByUsername) {
+      return res
+        .status(422)
+        .json({ error: 'User already exists with that username' });
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    const newUser = await User.create({
+      username,
+      fullname,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(200).json({ user: newUser, message: 'Registered Successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const exestingUserByEmail = await User.findOne({ where: { email } });
-
-  if (exestingUserByEmail) {
-    return res
-      .status(422)
-      .json({ error: 'User already exists with that email' });
-  }
-
-  const hashedPassword = await bcryptjs.hash(password, 10);
-
-  const newUser = await User.create({
-    username,
-    fullname,
-    email,
-    password: hashedPassword,
-  });
-
-  console.log(newUser);
-
-  res.status(200).json({ user: newUser, message: 'Registered Successfully' });
 };
 
 module.exports = { registerUser };
