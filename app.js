@@ -1,34 +1,28 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sequelize = require('./config/db');
-const userRouter = require('./routes/userRoutes');
-const cors = require('cors');
+const useRoutes = require('./routes/userRoutes');
+
+const PORT = 5000;
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
 
-const PORT = 5000;
-
-app.use('/api/users', userRouter);
-
-app.get('/', (req, res) => {
-  res.send('hello world');
-});
+app.use('/api/users', useRoutes);
 
 sequelize
   .sync()
   .then(() => {
-    console.log('Database synced successfully');
+    console.log('Database and tables synced');
   })
-  .catch((error) => {
-    console.log('Error while syncing to the database:', error);
+  .catch((err) => {
+    console.log('Error syncing database', err);
   });
 
-  const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+const server = app.listen(PORT, () => {
+  console.log(`server is running on ${PORT}`);
+});
 
 module.exports = { app, server };
